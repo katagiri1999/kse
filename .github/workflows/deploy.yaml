@@ -1,15 +1,13 @@
 name: Deploy Workflow
 
 env:
-  aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  aws_access_key_id: ${{ secrets.ACCESS_KEY_ID }}
+  aws_secret_access_key: ${{ secrets.SECRET_ACCESS_KEY }}
   aws_region: us-east-1
   bucket_dev: s3://kse-bucket-dev/
   bucket_prod: s3://kse-bucket-prod/
   cloudfront_id_dev: E25GVWSJOLO9YM
   cloudfront_id_prod: E3VL4ZJ1569SJR
-  api_dev: kse-api-dev
-  api_prod: kse-api-prod
 
 on:
   push:
@@ -31,12 +29,10 @@ jobs:
         run: |
           if [ ${{github.ref_name}} == 'prod' ]; then
             echo "stage=prod" >> $GITHUB_OUTPUT
-            echo "api=${{env.api_prod}}" >> $GITHUB_OUTPUT
             echo "bucket=${{env.bucket_prod}}" >> $GITHUB_OUTPUT
             echo "cloudfront=${{env.cloudfront_id_prod}}" >> $GITHUB_OUTPUT
           else
             echo "stage=dev" >> $GITHUB_OUTPUT
-            echo "api=${{env.api_dev}}" >> $GITHUB_OUTPUT
             echo "bucket=${{env.bucket_dev}}" >> $GITHUB_OUTPUT
             echo "cloudfront=${{env.cloudfront_id_dev}}" >> $GITHUB_OUTPUT
           fi
@@ -72,36 +68,3 @@ jobs:
 
       - if: success()
         run: echo "✅ end deploy-vue in success"
-
-  deploy-lambda:
-    runs-on: ubuntu-latest
-    needs: prejob
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.11
-
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{env.aws_access_key_id}}
-          aws-secret-access-key: ${{env.aws_secret_access_key}}
-          aws-region: ${{env.aws_region}}
-
-      - run: |
-          echo "start deploy-lambda to ${{needs.prejob.outputs.stage}}"
-          python -m pip install --upgrade pip
-          pip install pytest boto3
-          pytest test/test_lambda.py
-          cp ./config/config_${{needs.prejob.outputs.stage}}.py ./sub/config.py
-          zip -r zip.zip ./*
-          aws lambda update-function-code --function-name ${{needs.prejob.outputs.api}} --zip-file fileb://zip.zip
-        working-directory: ./lambda-kse
-
-      - if: failure()
-        run: echo "❌ end deploy-lambda in failure"
-
-      - if: success()
-        run: echo "✅ end deploy-lambda in success"
