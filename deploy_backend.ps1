@@ -3,6 +3,11 @@ $ErrorActionPreference = "Stop"
 try {
     Write-Host "- Start Backend Deploy" -ForegroundColor Green
 
+    $check = Read-Host "This is prod. Are You Sure? (y/n)"
+    if ($check -ne "y") {
+        throw "Stop Deploy"
+    }
+
     # set location to this script dir
     Set-Location $PSScriptRoot
 
@@ -15,7 +20,7 @@ try {
     # set config file
     Set-Location lambda-kse
     Write-Host "- Set config file" -ForegroundColor Yellow
-    cp ./config/config_dev.py ./sub/config.py
+    cp ./config/config_prod.py ./sub/config.py
 
     # remove cache files
     Write-Host "- Cache clear" -ForegroundColor Yellow
@@ -27,7 +32,7 @@ try {
 
     # deploy
     Write-Host "- Deploy" -ForegroundColor Yellow
-    aws lambda update-function-code --function-name kse-api-dev --zip-file fileb://zip.zip
+    aws lambda update-function-code --function-name kse-api-prod --zip-file fileb://zip.zip
 
     Write-Host "- Successfully Deployed" -ForegroundColor Green
 
