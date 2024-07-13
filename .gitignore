@@ -1,0 +1,9 @@
+**/*.pyc
+
+/vue-kse/node_modules/
+/vue-kse/dist/
+
+lambda-kse/sub/config.py
+lambda-kse/config/
+
+vue-kse/.env*

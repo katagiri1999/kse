@@ -1,0 +1,7 @@
+{
+    "python.testing.pytestArgs": [
+        "lambda-kse"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
